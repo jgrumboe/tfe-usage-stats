@@ -3,7 +3,9 @@ package internal
 import (
 	"context"
 	"time"
+	"fmt"
 
+	"github.com/evandro-slv/go-cli-charts/bar"
 	tfe "github.com/hashicorp/go-tfe"
 )
 
@@ -21,6 +23,7 @@ func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe
 			return nil, err
 		}
 
+
 		//print(workspaceRuns)
 		//
 		//	runs = append(runs, workspaceRuns...)
@@ -34,6 +37,12 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 	currentPage := 0
 	totalPages := 1
 	pageSize := 30
+
+	wsruns := map[string][]*tfe.Run{}
+	now := time.Now()
+	for i := 0; i <= 11; i++ {
+		wsruns[now.AddDate(0, i*-1, (now.Day()-1)*-1).Format("2006-01-02")] = make([]*tfe.Run, 0)
+	}
 
 	for currentPage < totalPages {
 		runPage, err := getRunPage(client, workspace.ID, tfe.RunListOptions{
@@ -54,6 +63,9 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 
 				if list, ok := runs[key]; ok {
 					runs[key] = append(list, run)
+				}
+				if list, ok := wsruns[key]; ok {
+					wsruns[key] = append(list, run)
 				}
 			}
 
@@ -92,6 +104,31 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 		currentPage++
 	}
 
+	wsdata := make(map[string]float64)
+	fmt.Printf("Succesful Applies per Month for workspace  %s : \n", workspace.Name)
+	var totalwsruns int = 0
+	for k, v := range wsruns {
+		wsdata[k] = float64(len(v))
+		totalwsruns += len(v)
+		fmt.Printf("No of ws runs for %s: %d \n", k, len(v))
+	}
+
+	if totalwsruns != 0 {
+		wsgraph := bar.Draw(wsdata, bar.Options{
+			Chart: bar.Chart{
+				Height: 10,
+			},
+			Bars: bar.Bars{
+				Width: 10,
+				Margin: bar.Margin{
+					Left:  1,
+					Right: 3,
+				},
+			},
+			Precision: 1,
+		})
+		println(wsgraph)
+	}
 	return nil
 }
 

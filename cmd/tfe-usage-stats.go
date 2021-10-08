@@ -73,6 +73,7 @@ func main() {
 
 	for k, v := range runs {
 		data[k] = float64(len(v))
+		fmt.Printf("No of runs for %s: %d \n", k, len(v))
 	}
 
 	graph := bar.Draw(data, bar.Options{
@@ -116,8 +117,8 @@ func main() {
 		}
 	}
 
-	fmt.Printf("Total Successful Runs: %d\n", runsum)
-	fmt.Printf("Succesful Applies per Month: \n")
+	fmt.Printf("Total Successful Applies: %d\n", runsum)
+	fmt.Printf("Total Succesful Applies per Month: \n")
 	println(graph)
 
 	count := len(histogram)

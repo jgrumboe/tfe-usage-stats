@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-tfe"
 )
 
@@ -20,7 +21,9 @@ func GetOrganizations(client *tfe.Client) ([]*tfe.Organization, error) {
 			},
 		})
 
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		organizations = append(organizations, orgPage.Items...)
 

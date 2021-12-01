@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-tfe"
 )
 
@@ -10,7 +11,9 @@ func GetWorkspaces(client *tfe.Client, organizations []*tfe.Organization) ([]*tf
 
 	for _, org := range organizations {
 		orgWorkspaces, err := getOrganizationWorkspaces(client, org)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		workspaces = append(workspaces, orgWorkspaces...)
 	}
@@ -33,7 +36,9 @@ func getOrganizationWorkspaces(client *tfe.Client, organization *tfe.Organizatio
 			},
 		})
 
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		workspaces = append(workspaces, workspacePage.Items...)
 

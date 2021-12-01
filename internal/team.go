@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+
 	"github.com/hashicorp/go-tfe"
 )
 
@@ -10,7 +11,9 @@ func GetTeams(client *tfe.Client, organizations []*tfe.Organization) ([]*tfe.Tea
 
 	for _, org := range organizations {
 		orgTeams, err := getOrganizationTeams(client, org)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		teams = append(teams, orgTeams...)
 	}
@@ -33,7 +36,9 @@ func getOrganizationTeams(client *tfe.Client, organization *tfe.Organization) ([
 			},
 		})
 
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 
 		teams = append(teams, teamPage.Items...)
 

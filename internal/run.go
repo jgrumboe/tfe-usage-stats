@@ -2,14 +2,15 @@ package internal
 
 import (
 	"context"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/evandro-slv/go-cli-charts/bar"
 	tfe "github.com/hashicorp/go-tfe"
+	log "github.com/sirupsen/logrus"
 )
 
-func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe.Run, error) {
+func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace, detailed *bool) (map[string][]*tfe.Run, error) {
 	runs := map[string][]*tfe.Run{}
 
 	now := time.Now()
@@ -18,11 +19,10 @@ func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe
 	}
 
 	for _, workspace := range workspaces {
-		err := getWorkspaceRuns(client, workspace, runs)
+		err := getWorkspaceRuns(client, workspace, runs, detailed)
 		if err != nil {
 			return nil, err
 		}
-
 
 		//print(workspaceRuns)
 		//
@@ -32,7 +32,7 @@ func GetRuns(client *tfe.Client, workspaces []*tfe.Workspace) (map[string][]*tfe
 	return runs, nil
 }
 
-func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[string][]*tfe.Run) error {
+func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[string][]*tfe.Run, detailed *bool) error {
 
 	currentPage := 0
 	totalPages := 1
@@ -105,15 +105,16 @@ func getWorkspaceRuns(client *tfe.Client, workspace *tfe.Workspace, runs map[str
 	}
 
 	wsdata := make(map[string]float64)
-	fmt.Printf("Succesful Applies per Month for workspace  %s : \n", workspace.Name)
+	fmt.Printf("Successful Applies per Month for workspace  %s : \n", workspace.Name)
+
 	var totalwsruns int = 0
 	for k, v := range wsruns {
 		wsdata[k] = float64(len(v))
 		totalwsruns += len(v)
-		fmt.Printf("No of ws runs for %s: %d \n", k, len(v))
+		log.Debug("No of ws runs for ", k, ": ", len(v))
 	}
 
-	if totalwsruns != 0 {
+	if totalwsruns != 0 && *detailed {
 		wsgraph := bar.Draw(wsdata, bar.Options{
 			Chart: bar.Chart{
 				Height: 10,

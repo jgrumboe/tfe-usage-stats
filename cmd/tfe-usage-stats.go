@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"strconv"
@@ -12,12 +11,15 @@ import (
 	"github.com/evandro-slv/go-cli-charts/bar"
 	tfe "github.com/hashicorp/go-tfe"
 	"github.com/peytoncasper/tfe-usage-stats/internal"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 
 	host := flag.String("host", "https://app.terraform.io", "TFE/C hostname")
 	token := flag.String("token", "", "TFE/C API token")
+	detailed := flag.Bool("detailed", false, "Show details per workspace")
+	debug := flag.Bool("debug", false, "Debug output")
 
 	flag.Parse()
 
@@ -25,6 +27,18 @@ func main() {
 		log.Println("API Token Not Provided")
 		os.Exit(1)
 	}
+
+	if *debug {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+	log.SetFormatter(&log.TextFormatter{
+		DisableTimestamp:       true,
+		DisableSorting:         false,
+		DisableLevelTruncation: true,
+		PadLevelText:           true,
+	})
 
 	config := &tfe.Config{
 		Address: *host,
@@ -38,22 +52,26 @@ func main() {
 
 	orgs, err := internal.GetOrganizations(client)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 
 	workspaces, err := internal.GetWorkspaces(client, orgs)
 
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 
 	teams, err := internal.GetTeams(client, orgs)
 
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 
-	runs, err := internal.GetRuns(client, workspaces)
+	runs, err := internal.GetRuns(client, workspaces, detailed)
+
+	if err != nil {
+		log.Error(err)
+	}
 
 	users := map[string]int{}
 	for _, t := range teams {
@@ -73,7 +91,7 @@ func main() {
 
 	for k, v := range runs {
 		data[k] = float64(len(v))
-		fmt.Printf("No of runs for %s: %d \n", k, len(v))
+		log.Debug("No of runs for ", k, ": ", len(v))
 	}
 
 	graph := bar.Draw(data, bar.Options{
@@ -118,7 +136,7 @@ func main() {
 	}
 
 	fmt.Printf("Total Successful Applies: %d\n", runsum)
-	fmt.Printf("Total Succesful Applies per Month: \n")
+	fmt.Printf("Total Successful Applies per Month: \n")
 	println(graph)
 
 	count := len(histogram)
